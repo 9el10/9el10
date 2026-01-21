@@ -14,5 +14,4 @@
 > Current Task: Calibrating Motorized Faders... 🎛️
 > Status: ONLINE
 ```
-
-![Visitor Count](https://count.getloli.com/get/@9el10?theme=rule34)
+![Visitor Count](https://profile-counter.glitch.me/9el10/count.svg)
