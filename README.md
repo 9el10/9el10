@@ -13,4 +13,4 @@
   [√] Home Automation Integration
 > Current Task: Calibrating Motorized Faders... 🎛️
 > Status: ONLINE
-![Visitor Count](https://profile-counter.glitch.me/9el10/count.svg)
+
