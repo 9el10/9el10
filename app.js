@@ -3,7 +3,8 @@ const playBtn = document.getElementById("playBtn");
 const prevBtn = document.getElementById("prevBtn");
 const nextBtn = document.getElementById("nextBtn");
 const muteBtn = document.getElementById("muteBtn");
-const loopToggle = document.getElementById("loop");
+const playModeSelect = document.getElementById("playMode");
+const autoNextToggle = document.getElementById("autoNext");
 const progress = document.getElementById("progress");
 const volume = document.getElementById("volume");
 const speed = document.getElementById("speed");
@@ -34,6 +35,7 @@ let tracks = [];
 let currentIndex = -1;
 let cuePoints = [];
 let fadeRequest;
+let draggedIndex = null;
 
 const ensureAudioContextRunning = async () => {
   if (!audioContext) {
@@ -110,6 +112,12 @@ const setActiveTrack = (index) => {
   highlightTrack();
 };
 
+const getPlayMode = () => playModeSelect.value;
+
+const updateLoopState = () => {
+  audio.loop = getPlayMode() === "single-loop";
+};
+
 const highlightTrack = () => {
   document.querySelectorAll(".track").forEach((trackEl, idx) => {
     trackEl.classList.toggle("active", idx === currentIndex);
@@ -136,6 +144,7 @@ const playTrack = async () => {
   if (!audio.src) {
     return;
   }
+  updateLoopState();
   initAudioContext();
   await ensureAudioContextRunning();
   await audio.play();
@@ -231,12 +240,19 @@ const renderTrackList = () => {
   tracks.forEach((track, index) => {
     const item = document.createElement("li");
     item.className = "track";
+    item.setAttribute("draggable", "true");
+    item.dataset.index = index;
     item.innerHTML = `
       <div class="track__info">
-        <span class="track__name">${track.name}</span>
-        <span class="track__duration">${track.detail}</span>
+        <span class="track__order">#${index + 1}</span>
+        <div class="track__meta">
+          <span class="track__name">${track.name}</span>
+          <span class="track__duration">${track.detail}</span>
+        </div>
       </div>
       <div class="track__actions">
+        <button class="track__move" data-action="move-up" data-index="${index}" aria-label="上移">↑</button>
+        <button class="track__move" data-action="move-down" data-index="${index}" aria-label="下移">↓</button>
         <button data-action="play" data-index="${index}">播放</button>
         <button data-action="remove" data-index="${index}">移除</button>
       </div>
@@ -267,6 +283,53 @@ const removeTrack = (index) => {
     currentIndex -= 1;
   }
   renderTrackList();
+};
+
+const moveTrack = (fromIndex, toIndex) => {
+  if (fromIndex === toIndex) {
+    return;
+  }
+  const [moved] = tracks.splice(fromIndex, 1);
+  tracks.splice(toIndex, 0, moved);
+  if (currentIndex === fromIndex) {
+    currentIndex = toIndex;
+  } else if (fromIndex < currentIndex && toIndex >= currentIndex) {
+    currentIndex -= 1;
+  } else if (fromIndex > currentIndex && toIndex <= currentIndex) {
+    currentIndex += 1;
+  }
+  renderTrackList();
+};
+
+const getNextIndex = () => {
+  if (tracks.length === 0) {
+    return -1;
+  }
+  const mode = getPlayMode();
+  if (mode === "shuffle") {
+    if (tracks.length === 1) {
+      return 0;
+    }
+    let nextIndex = currentIndex;
+    while (nextIndex === currentIndex) {
+      nextIndex = Math.floor(Math.random() * tracks.length);
+    }
+    return nextIndex;
+  }
+  if (currentIndex < tracks.length - 1) {
+    return currentIndex + 1;
+  }
+  return mode === "list-loop" ? 0 : -1;
+};
+
+const getPrevIndex = () => {
+  if (tracks.length === 0) {
+    return -1;
+  }
+  if (currentIndex > 0) {
+    return currentIndex - 1;
+  }
+  return getPlayMode() === "list-loop" ? tracks.length - 1 : -1;
 };
 
 const fadeVolume = (target, duration = 3000, onComplete) => {
@@ -328,15 +391,17 @@ playBtn.addEventListener("click", () => {
 });
 
 prevBtn.addEventListener("click", () => {
-  if (currentIndex > 0) {
-    setActiveTrack(currentIndex - 1);
+  const prevIndex = getPrevIndex();
+  if (prevIndex !== -1) {
+    setActiveTrack(prevIndex);
     playTrack();
   }
 });
 
 nextBtn.addEventListener("click", () => {
-  if (currentIndex < tracks.length - 1) {
-    setActiveTrack(currentIndex + 1);
+  const nextIndex = getNextIndex();
+  if (nextIndex !== -1) {
+    setActiveTrack(nextIndex);
     playTrack();
   }
 });
@@ -346,8 +411,16 @@ muteBtn.addEventListener("click", () => {
   updateMuteButton();
 });
 
-loopToggle.addEventListener("change", (event) => {
-  audio.loop = event.target.checked;
+playModeSelect.addEventListener("change", updateLoopState);
+
+autoNextToggle.addEventListener("change", () => {
+  if (autoNextToggle.checked && audio.ended) {
+    const nextIndex = getNextIndex();
+    if (nextIndex !== -1) {
+      setActiveTrack(nextIndex);
+      playTrack();
+    }
+  }
 });
 
 progress.addEventListener("input", (event) => {
@@ -404,8 +477,12 @@ audio.addEventListener("timeupdate", updateTime);
 
 audio.addEventListener("ended", () => {
   stopWaveform();
-  if (currentIndex < tracks.length - 1) {
-    setActiveTrack(currentIndex + 1);
+  if (!autoNextToggle.checked || getPlayMode() === "single-loop") {
+    return;
+  }
+  const nextIndex = getNextIndex();
+  if (nextIndex !== -1) {
+    setActiveTrack(nextIndex);
     playTrack();
   }
 });
@@ -443,9 +520,63 @@ trackList.addEventListener("click", (event) => {
     setActiveTrack(index);
     playTrack();
   }
+  if (action === "move-up" && index > 0) {
+    moveTrack(index, index - 1);
+  }
+  if (action === "move-down" && index < tracks.length - 1) {
+    moveTrack(index, index + 1);
+  }
   if (action === "remove") {
     removeTrack(index);
   }
+});
+
+trackList.addEventListener("dragstart", (event) => {
+  const item = event.target.closest(".track");
+  if (!item) {
+    return;
+  }
+  draggedIndex = Number(item.dataset.index);
+  event.dataTransfer.effectAllowed = "move";
+  item.classList.add("dragging");
+});
+
+trackList.addEventListener("dragover", (event) => {
+  event.preventDefault();
+  const item = event.target.closest(".track");
+  if (!item) {
+    return;
+  }
+  item.classList.add("dragover");
+});
+
+trackList.addEventListener("dragleave", (event) => {
+  const item = event.target.closest(".track");
+  if (!item) {
+    return;
+  }
+  item.classList.remove("dragover");
+});
+
+trackList.addEventListener("drop", (event) => {
+  event.preventDefault();
+  const item = event.target.closest(".track");
+  if (!item) {
+    return;
+  }
+  const dropIndex = Number(item.dataset.index);
+  item.classList.remove("dragover");
+  if (Number.isInteger(draggedIndex)) {
+    moveTrack(draggedIndex, dropIndex);
+  }
+  draggedIndex = null;
+});
+
+trackList.addEventListener("dragend", () => {
+  document.querySelectorAll(".track").forEach((track) => {
+    track.classList.remove("dragging", "dragover");
+  });
+  draggedIndex = null;
 });
 
 fileInput.addEventListener("change", (event) => {
@@ -476,4 +607,5 @@ volume.value = audio.volume;
 updatePlayButton();
 updateMuteButton();
 updateTime();
+updateLoopState();
 renderCueList();

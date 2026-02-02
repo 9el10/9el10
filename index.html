@@ -102,9 +102,18 @@
                     <option value="1.5">1.5x</option>
                   </select>
                 </div>
+                <div class="control-group">
+                  <label for="playMode">播放顺序</label>
+                  <select id="playMode">
+                    <option value="order" selected>顺序播放</option>
+                    <option value="list-loop">列表循环</option>
+                    <option value="single-loop">单曲循环</option>
+                    <option value="shuffle">随机播放</option>
+                  </select>
+                </div>
                 <div class="control-group toggle-group">
-                  <label for="loop">循环</label>
-                  <input type="checkbox" id="loop" />
+                  <label for="autoNext">自动下一首</label>
+                  <input type="checkbox" id="autoNext" checked />
                 </div>
                 <div class="control-group">
                   <label for="mute">静音</label>
@@ -142,7 +151,7 @@
           <div class="library__header">
             <div>
               <h2>演出曲目库</h2>
-              <p>支持拖拽与多文件导入，自动保持顺序。</p>
+              <p>支持拖拽与多文件导入，可拖动或点击按钮调整播放顺序。</p>
             </div>
             <label class="btn btn--outline" for="fileInput">导入音频</label>
             <input type="file" id="fileInput" accept="audio/*" multiple hidden />
