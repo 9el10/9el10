@@ -1,0 +1,37 @@
+{
+  "name": "stagecraft-audio-console",
+  "version": "1.0.0",
+  "description": "舞台演出专用音频播放器",
+  "main": "main.js",
+  "author": "9el10",
+  "license": "MIT",
+  "scripts": {
+    "build:icons": "node scripts/build-icons.js",
+    "start": "npm run build:icons && electron .",
+    "pack": "npm run build:icons && electron-builder --dir",
+    "dist": "npm run build:icons && electron-builder --win --x64"
+  },
+  "devDependencies": {
+    "electron": "^30.0.0",
+    "electron-builder": "^24.13.3",
+    "png-to-ico": "^2.1.0",
+    "sharp": "^0.33.2"
+  },
+  "build": {
+    "appId": "com.stagecraft.audio.console",
+    "productName": "Stagecraft Audio Console",
+    "asar": true,
+    "files": [
+      "**/*",
+      "!dist/**",
+      "!node_modules/**"
+    ],
+    "directories": {
+      "output": "dist"
+    },
+    "win": {
+      "target": "nsis",
+      "icon": "assets/generated/icon.ico"
+    }
+  }
+}

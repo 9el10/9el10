@@ -31,7 +31,7 @@ body {
 }
 
 .app {
-  width: min(1200px, 95vw);
+  width: min(1280px, 96vw);
   background: var(--bg);
   border-radius: 20px;
   padding: 36px;
@@ -145,8 +145,9 @@ body {
 
 .app__main {
   display: grid;
-  grid-template-columns: 2fr 1fr;
-  gap: 28px;
+  grid-template-columns: 1.7fr 1fr;
+  gap: 24px;
+  align-items: start;
 }
 
 .player {
@@ -245,7 +246,7 @@ canvas {
 
 .control-row {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
   gap: 16px;
 }
 
@@ -446,7 +447,7 @@ canvas {
   display: flex;
   flex-direction: column;
   gap: 12px;
-  max-height: 360px;
+  max-height: 420px;
   overflow-y: auto;
   padding-right: 6px;
 }
@@ -460,6 +461,7 @@ canvas {
   border-radius: 16px;
   border: 1px solid transparent;
   gap: 12px;
+  transition: border-color 0.2s ease, transform 0.2s ease;
 }
 
 .track.active {
@@ -469,12 +471,33 @@ canvas {
 
 .track__info {
   display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.track__order {
+  font-weight: 600;
+  color: var(--accent);
+  background: rgba(255, 159, 10, 0.15);
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  flex-shrink: 0;
+}
+
+.track__meta {
+  display: flex;
   flex-direction: column;
   gap: 4px;
+  min-width: 0;
 }
 
 .track__name {
   font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .track__duration {
@@ -485,6 +508,7 @@ canvas {
 .track__actions {
   display: flex;
   gap: 8px;
+  flex-wrap: wrap;
 }
 
 .track__actions button {
@@ -494,6 +518,22 @@ canvas {
   padding: 6px 10px;
   border-radius: 12px;
   cursor: pointer;
+}
+
+.track__move {
+  width: 32px;
+  text-align: center;
+  font-weight: 700;
+}
+
+.track.dragging {
+  opacity: 0.6;
+  transform: scale(0.99);
+}
+
+.track.dragover {
+  border-color: rgba(124, 92, 255, 0.7);
+  box-shadow: 0 0 0 1px rgba(124, 92, 255, 0.35);
 }
 
 @media (max-width: 960px) {
