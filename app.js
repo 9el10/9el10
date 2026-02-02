@@ -16,6 +16,7 @@ const currentTimeLabel = document.getElementById("currentTime");
 const remainingTimeLabel = document.getElementById("remainingTime");
 const durationLabel = document.getElementById("duration");
 const systemStatus = document.getElementById("systemStatus");
+const timecodeDisplay = document.getElementById("timecodeDisplay");
 const canvas = document.getElementById("waveform");
 const canvasCtx = canvas.getContext("2d");
 const fadeInBtn = document.getElementById("fadeInBtn");
@@ -54,11 +55,24 @@ const formatTime = (time) => {
     .padStart(2, "0")}`;
 };
 
+const formatTimecode = (time) => {
+  if (!Number.isFinite(time)) {
+    return "00:00:00";
+  }
+  const hours = Math.floor(time / 3600);
+  const minutes = Math.floor((time % 3600) / 60);
+  const seconds = Math.floor(time % 60);
+  return `${hours.toString().padStart(2, "0")}:${minutes
+    .toString()
+    .padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`;
+};
+
 const updateTime = () => {
   currentTimeLabel.textContent = formatTime(audio.currentTime);
   durationLabel.textContent = formatTime(audio.duration);
   const remaining = audio.duration ? Math.max(audio.duration - audio.currentTime, 0) : 0;
   remainingTimeLabel.textContent = formatTime(remaining);
+  timecodeDisplay.textContent = formatTimecode(audio.currentTime);
   if (audio.duration) {
     progress.value = ((audio.currentTime / audio.duration) * 100).toFixed(2);
   }
