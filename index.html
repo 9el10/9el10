@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>舞台演出音频播放器</title>
+    <link rel="stylesheet" href="styles.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;600;700&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <div class="app">
+      <header class="app__header">
+        <div>
+          <p class="app__eyebrow">Stagecraft Audio Console</p>
+          <h1>舞台演出专用音频播放器</h1>
+          <p class="app__subtitle">
+            集中管理曲目、预览波形、精准控制节奏与音量，为现场演出提供稳定可靠的播放体验。
+          </p>
+        </div>
+        <div class="status-card">
+          <p class="status-card__label">系统状态</p>
+          <p class="status-card__value" id="systemStatus">READY</p>
+          <p class="status-card__desc">Audio Engine · 48kHz</p>
+        </div>
+      </header>
+
+      <section class="toolbar">
+        <div class="toolbar__group">
+          <span class="toolbar__label">Workspace</span>
+          <span class="toolbar__value">Show Deck · QLab 风格</span>
+        </div>
+        <div class="toolbar__group toolbar__group--center">
+          <button class="toolbar__btn">GO</button>
+          <button class="toolbar__btn">PAUSE</button>
+          <button class="toolbar__btn">STOP</button>
+        </div>
+        <div class="toolbar__group">
+          <span class="toolbar__label">Timecode</span>
+          <span class="toolbar__value" id="timecodeDisplay">00:00:00</span>
+        </div>
+      </section>
+
+      <main class="app__main">
+        <section class="player">
+          <div class="player__art">
+            <div class="player__badge">LIVE</div>
+            <canvas id="waveform" width="720" height="260" aria-label="实时波形"></canvas>
+            <div class="player__meta">
+              <div>
+                <p class="track__title" id="trackTitle">未选择曲目</p>
+                <p class="track__subtitle" id="trackSubtitle">请导入音频文件开始播放</p>
+              </div>
+              <div class="track__time">
+                <div>
+                  <span id="currentTime">00:00</span>
+                  <span class="divider">/</span>
+                  <span id="duration">00:00</span>
+                </div>
+                <div class="track__remaining">
+                  剩余 <span id="remainingTime">00:00</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="player__controls">
+            <div class="primary-controls">
+              <button class="btn btn--ghost" id="prevBtn" aria-label="上一首">
+                <span>⏮</span>
+                上一首
+              </button>
+              <button class="btn btn--primary" id="playBtn" aria-label="播放或暂停">
+                ▶ 播放
+              </button>
+              <button class="btn btn--ghost" id="nextBtn" aria-label="下一首">
+                下一首
+                <span>⏭</span>
+              </button>
+            </div>
+
+            <div class="secondary-controls">
+              <div class="control-group">
+                <label for="progress">播放进度</label>
+                <input type="range" id="progress" min="0" max="100" value="0" />
+              </div>
+              <div class="control-row">
+                <div class="control-group">
+                  <label for="volume">音量</label>
+                  <input type="range" id="volume" min="0" max="1" step="0.01" value="0.85" />
+                </div>
+                <div class="control-group">
+                  <label for="speed">速度</label>
+                  <select id="speed">
+                    <option value="0.75">0.75x</option>
+                    <option value="1" selected>1.0x</option>
+                    <option value="1.25">1.25x</option>
+                    <option value="1.5">1.5x</option>
+                  </select>
+                </div>
+                <div class="control-group toggle-group">
+                  <label for="loop">循环</label>
+                  <input type="checkbox" id="loop" />
+                </div>
+                <div class="control-group">
+                  <label for="mute">静音</label>
+                  <button class="btn btn--ghost" id="muteBtn">取消静音</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="stage-panel">
+            <div class="stage-panel__header">
+              <div>
+                <h3>舞台控制</h3>
+                <p>快速执行淡入淡出与跳转 Cue 点。</p>
+              </div>
+              <div class="level-meter">
+                <div class="level-meter__label">输出电平</div>
+                <div class="level-meter__bars">
+                  <span class="level-bar" data-level="left"></span>
+                  <span class="level-bar" data-level="right"></span>
+                </div>
+              </div>
+            </div>
+            <div class="stage-panel__actions">
+              <button class="btn btn--outline" id="fadeInBtn">淡入 3s</button>
+              <button class="btn btn--outline" id="fadeOutBtn">淡出 3s</button>
+              <button class="btn btn--ghost" id="addCueBtn">记录 Cue</button>
+              <button class="btn btn--ghost" id="clearCueBtn">清空 Cue</button>
+            </div>
+            <ul class="cue-list" id="cueList"></ul>
+          </div>
+        </section>
+
+        <aside class="library">
+          <div class="library__header">
+            <div>
+              <h2>演出曲目库</h2>
+              <p>支持拖拽与多文件导入，自动保持顺序。</p>
+            </div>
+            <label class="btn btn--outline" for="fileInput">导入音频</label>
+            <input type="file" id="fileInput" accept="audio/*" multiple hidden />
+          </div>
+          <div class="library__dropzone" id="dropzone">
+            <p>将音频文件拖放到此处进行添加</p>
+          </div>
+          <ul class="library__list" id="trackList"></ul>
+        </aside>
+      </main>
+    </div>
+
+    <audio id="audio" preload="metadata"></audio>
+    <script src="app.js"></script>
+  </body>
+</html>
